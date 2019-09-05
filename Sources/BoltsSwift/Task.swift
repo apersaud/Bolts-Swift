@@ -47,7 +47,7 @@ struct TaskContinuationOptions: OptionSet {
 /// The consumer view of a Task.
 /// Task has methods to inspect the state of the task, and to add continuations to be run once the task is complete.
 ///
-public final class Task<TResult> {
+open class Task<TResult> {
     public typealias Continuation = () -> Void
 
     fileprivate let synchronizationQueue = DispatchQueue(label: "com.bolts.task", attributes: DispatchQueue.Attributes.concurrent)
@@ -58,9 +58,10 @@ public final class Task<TResult> {
 
     // MARK: Initializers
 
-    init() {}
+    public required init() {}
 
-    init(state: TaskState<TResult>) {
+    convenience init(state: TaskState<TResult>) {
+        self.init()
         _state = state
     }
 
@@ -69,7 +70,8 @@ public final class Task<TResult> {
 
      - parameter result: The task result.
      */
-    public init(_ result: TResult) {
+    public convenience init(_ result: TResult) {
+        self.init()
         _state = .success(result)
     }
 
@@ -78,7 +80,8 @@ public final class Task<TResult> {
 
      - parameter error: The task error.
      */
-    public init(error: Error) {
+    public convenience init(error: Error) {
+        self.init()
         _state = .error(error)
     }
 
@@ -89,7 +92,9 @@ public final class Task<TResult> {
      */
     public class func cancelledTask() -> Self {
         // Swift prevents this method from being called `cancelled` due to the `cancelled` instance var. This is most likely a bug.
-        return self.init(state: .cancelled)
+        let task = self.init()
+        task._state = .cancelled
+        return task
     }
 
     class func emptyTask() -> Task<Void> {
